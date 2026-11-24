@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>رادار أخبار السوق المباشر</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --gold: #fbbf24;
+      --gold-bg: rgba(251, 191, 36, 0.12);
+      --green: #10b981;
+    }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 14px; }
+    .container { max-width: 850px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #334155; padding-bottom: 12px; margin-bottom: 14px; }
+    h1 { font-size: 1.25rem; margin: 0; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .live-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--green); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    
+    .controls-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .meta { font-size: 0.8rem; color: var(--muted); }
+    
+    .watchlist-box { background: var(--card); border: 1px solid #334155; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+    .watchlist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+    .watchlist-title { font-size: 0.88rem; color: var(--gold); font-weight: bold; }
+    .add-ticker { display: flex; gap: 6px; }
+    .add-ticker input { background: #0f172a; border: 1px solid #475569; color: var(--text); padding: 5px 10px; border-radius: 8px; width: 85px; text-transform: uppercase; font-size: 0.85rem; }
+    .add-ticker button { background: var(--gold); color: #0f172a; border: none; padding: 5px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+    .tickers-list { display: flex; gap: 6px; flex-wrap: wrap; }
+    .ticker-tag { background: var(--gold-bg); border: 1px solid var(--gold); color: var(--gold); padding: 3px 10px; border-radius: 16px; font-size: 0.82rem; font-weight: bold; display: flex; align-items: center; gap: 6px; direction: ltr; }
+    .ticker-tag span { cursor: pointer; color: #fca5a5; }
+
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn { background: var(--card); color: var(--text); border: 1px solid #334155; padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.82rem; }
+    .btn.active { background: var(--accent); color: #0f172a; font-weight: bold; border-color: var(--accent); }
+    .btn.gold-filter.active { background: var(--gold); color: #0f172a; border-color: var(--gold); }
+    .sound-btn { background: #1e293b; border: 1px solid var(--gold); color: var(--gold); padding: 5px 10px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+    .sound-btn.muted { border-color: #475569; color: var(--muted); }
+    .notif-btn { background: #1e293b; border: 1px solid var(--accent); color: var(--accent); padding: 5px 10px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+    .notif-btn.granted { border-color: var(--green); color: var(--green); }
+
+    .card { background: var(--card); border: 1px solid #334155; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .card.highlight { border: 2px solid var(--gold); background: linear-gradient(145deg, #1e293b 0%, #2a2417 100%); box-shadow: 0 0 15px rgba(251, 191, 36, 0.15); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--accent); margin-bottom: 10px; font-weight: bold; }
+    .badge-gold { background: var(--gold); color: #0f172a; padding: 2px 8px; border-radius: 6px; font-size: 0.78rem; margin-right: 6px; }
+    .card-time { color: var(--muted); font-weight: normal; direction: ltr; font-size: 0.78rem; }
+    
+    .ar-text { font-size: 1.02rem; line-height: 1.65; color: #ffffff; margin-bottom: 10px; font-weight: 500; background: rgba(15, 23, 42, 0.45); padding: 10px; border-radius: 8px; border-right: 3px solid var(--accent); }
+    .card.highlight .ar-text { border-right-color: var(--gold); }
+    .en-text { line-height: 1.5; font-size: 0.85rem; color: var(--muted); direction: ltr; text-align: left; white-space: pre-line; }
+    
+    mark.ticker-hl { background: var(--gold); color: #0f172a; padding: 1px 5px; border-radius: 4px; font-weight: bold; }
+    .card-footer { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .card-footer a { color: var(--accent); text-decoration: none; font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span class="live-dot"></span> بث السوق المباشر (مترجم)</h1>
+      <div class="controls-top">
+        <button id="notifBtn" class="notif-btn" onclick="requestNotifPermission()">📲 تفعيل الإشعارات</button>
+        <button id="soundToggle" class="sound-btn" onclick="toggleSound()">🔔 الصوت: مفعّل</button>
+        <button class="sound-btn" onclick="testAlert()">🔊 تجربة</button>
+        <button class="sound-btn" onclick="fetchLiveFeeds(true)">🔄 تحديث</button>
+        <span class="meta" id="updated">جاري الاتصال...</span>
+      </div>
+    </header>
+
+    <div class="watchlist-box">
+      <div class="watchlist-header">
+        <span class="watchlist-title">⭐ أسهمي المراقبة (تمييز ذهبي + إشعار فوري + صوت)</span>
+        <div class="add-ticker">
+          <input type="text" id="tickerInput" placeholder="رمز السهم" onkeydown="if(event.key==='Enter') addTicker()" />
+          <button onclick="addTicker()">+ إضافة</button>
+        </div>
+      </div>
+      <div class="tickers-list" id="tickersList"></div>
+    </div>
+
+    <div class="filters">
+      <button class="btn active" onclick="filterPosts('all', this)">الكل</button>
+      <button class="btn gold-filter" onclick="filterPosts('watchlist', this)">⭐ أسهمي فقط</button>
+      <button class="btn" onclick="filterPosts('intradayrider', this)">@intradayrider</button>
+      <button class="btn" onclick="filterPosts('nuntiobot', this)">@nuntiobot</button>
+      <button class="btn" onclick="filterPosts('stockplaymaker1', this)">@stockplaymaker1</button>
+      <button class="btn" onclick="filterPosts('askedgar_app', this)">@askedgar_app</button>
+    </div>
+
+    <div id="feed"></div>
+  </div>
+
+  <script>
+    const ACCOUNTS = ['intradayrider', 'nuntiobot', 'stockplaymaker1', 'askedgar_app'];
+    const NITTER_NODES = ['https://nitter.poast.org', 'https://xcancel.com', 'https://nitter.privacydev.net'];
+    const DEFAULT_TICKERS = ['NCPL', 'DVLT', 'MEDS', 'LCID'];
+
+    let watchlist = JSON.parse(localStorage.getItem('my_watchlist')) || DEFAULT_TICKERS;
+    let seenLinks = new Set(JSON.parse(localStorage.getItem('seen_market_links')) || []);
+    let translationCache = JSON.parse(localStorage.getItem('ar_translations_v1')) || {};
+    let soundEnabled = true;
+    let allPosts = [];
+    let currentFilter = 'all';
+
+    function updateNotifButtonUI() {
+      const btn = document.getElementById('notifBtn');
+      if (!('Notification' in window)) {
+        btn.style.display = 'none';
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        btn.textContent = '✅ الإشعارات مفعّلة';
+        btn.classList.add('granted');
+      } else if (Notification.permission === 'denied') {
+        btn.textContent = '🚫 الإشعارات محظورة';
+      }
+    }
+
+    async function requestNotifPermission() {
+      if (!('Notification' in window)) {
+        alert('متصفحك لا يدعم الإشعارات المنبثقة. على الآيفون، أضف الصفحة للشاشة الرئيسية أولاً.');
+        return;
+      }
+      const permission = await Notification.requestPermission();
+      updateNotifButtonUI();
+      if (permission === 'granted') {
+        sendPushNotification('رادار السوق المباشر', 'تم تفعيل الإشعارات الفورية لأسهمك بنجاح! 🚀', '');
+      }
+    }
+
+    function sendPushNotification(title, body, url) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const notif = new Notification(title, {
+            body: body,
+            tag: url || 'market-alert',
+            renotify: true
+          });
+          if (url) {
+            notif.onclick = function() {
+              window.focus();
+              window.open(url, '_blank');
+              notif.close();
+            };
+          }
+        } catch (e) {
+          console.log('Notification error:', e);
+        }
+      }
+    }
+
+    function playAlertSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const tone = (freq, start, dur) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0.25, start);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + dur);
+        };
+        tone(880, ctx.currentTime, 0.16);
+        tone(1174.66, ctx.currentTime + 0.15, 0.25);
+      } catch (e) {}
+    }
+
+    function testAlert() {
+      playAlertSound();
+      sendPushNotification('⚡ تجربة تنبيه: $DVLT', 'هذا مثال لكيفية ظهور إشعار أخبار أسهمك على شاشة جهازك.', '');
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('soundToggle');
+      btn.textContent = soundEnabled ? '🔔 الصوت: مفعّل' : '🔕 الصوت: مكتوم';
+      btn.classList.toggle('muted', !soundEnabled);
+      if (soundEnabled) playAlertSound();
+    }
+
+    function renderWatchlist() {
+      document.getElementById('tickersList').innerHTML = watchlist.map(t => `
+        <div class="ticker-tag">$${t} <span onclick="removeTicker('${t}')">×</span></div>
+      `).join('');
+    }
+
+    function addTicker() {
+      const input = document.getElementById('tickerInput');
+      const val = input.value.trim().toUpperCase().replace(/[^A-Z]/g, '');
+      if (val && !watchlist.includes(val)) {
+        watchlist.push(val);
+        localStorage.setItem('my_watchlist', JSON.stringify(watchlist));
+        renderWatchlist();
+        applyFilter();
+      }
+      input.value = '';
+    }
+
+    function removeTicker(ticker) {
+      watchlist = watchlist.filter(t => t !== ticker);
+      localStorage.setItem('my_watchlist', JSON.stringify(watchlist));
+      renderWatchlist();
+      applyFilter();
+    }
+
+    async function translateToArabic(text) {
+      if (translationCache[text]) return translationCache[text];
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const translated = data[0].map(item => item[0]).join('');
+        translationCache[text] = translated;
+        const keys = Object.keys(translationCache);
+        if (keys.length > 200) delete translationCache[keys[0]];
+        localStorage.setItem('ar_translations_v1', JSON.stringify(translationCache));
+        return translated;
+      } catch (e) {
+        return text;
+      }
+    }
+
+    async function fetchAccountDirect(account) {
+      for (const node of NITTER_NODES) {
+        try {
+          const rssUrl = `${node}/${account}/rss`;
+          const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&_=${Date.now()}`;
+          const res = await fetch(apiUrl);
+          const data = await res.json();
+          if (data.status === 'ok' && data.items && data.items.length > 0) {
+            return data.items.slice(0, 12).map(item => {
+              const tweetId = item.link.split('/').pop().split('#')[0];
+              return {
+                account: account,
+                title: item.title.replace(/<[^>]*>?/gm, '').trim(),
+                link: `https://x.com/${account}/status/${tweetId}`,
+                published: item.pubDate,
+                ts: new Date(item.pubDate).getTime() || 0
+              };
+            });
+          }
+        } catch (e) { continue; }
+      }
+      return [];
+    }
+
+    async function fetchLiveFeeds(manual = false) {
+      if (manual) document.getElementById('updated').textContent = 'جاري التحديث...';
+      
+      const results = await Promise.all(ACCOUNTS.map(acc => fetchAccountDirect(acc)));
+      let combined = results.flat();
+
+      if (combined.length === 0) {
+        try {
+          const res = await fetch('feed.json?t=' + Date.now());
+          const fallback = await res.json();
+          combined = (fallback.posts || []).map(p => ({ ...p, ts: new Date(p.published).getTime() || 0 }));
+        } catch (e) {}
+      }
+
+      combined.sort((a, b) => b.ts - a.ts);
+      allPosts = combined.slice(0, 50);
+
+      await Promise.all(allPosts.map(async p => {
+        p.arTitle = await translateToArabic(p.title);
+      }));
+
+      let shouldRing = false;
+      const isFirstRun = seenLinks.size === 0;
+
+      allPosts.forEach(p => {
+        if (!seenLinks.has(p.link)) {
+          seenLinks.add(p.link);
+          const matched = getMatchedTickers(p.title);
+          if (!isFirstRun && matched.length > 0) {
+            shouldRing = true;
+            const tickersStr = matched.map(m => '$' + m).join(' ');
+            sendPushNotification(
+              `⚡ خبر جديد: ${tickersStr} (@${p.account})`,
+              p.arTitle || p.title,
+              p.link
+            );
+          }
+        }
+      });
+
+      localStorage.setItem('seen_market_links', JSON.stringify(Array.from(seenLinks).slice(-300)));
+      if (shouldRing) playAlertSound();
+
+      const now = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      document.getElementById('updated').textContent = `مباشر • آخر فحص: ${now}`;
+      applyFilter();
+    }
+
+    function getMatchedTickers(text) {
+      return watchlist.filter(ticker => {
+        const regex = new RegExp(`(^|[^A-Z0-9])\\$?${ticker}([^A-Z0-9]|$)`, 'i');
+        return regex.test(text);
+      });
+    }
+
+    function highlightText(rawText) {
+      let safe = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      watchlist.forEach(ticker => {
+        const regex = new RegExp(`(^|[^A-Z0-9])(\\$?${ticker})(?=[^A-Z0-9]|$)`, 'gi');
+        safe = safe.replace(regex, `$1<mark class="ticker-hl">$2</mark>`);
+      });
+      return safe;
+    }
+
+    function filterPosts(filterType, btn) {
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = filterType;
+      applyFilter();
+    }
+
+    function applyFilter() {
+      let filtered = allPosts;
+      if (currentFilter === 'watchlist') {
+        filtered = allPosts.filter(p => getMatchedTickers(p.title).length > 0);
+      } else if (currentFilter !== 'all') {
+        filtered = allPosts.filter(p => p.account === currentFilter);
+      }
+      renderPosts(filtered);
+    }
+
+    function renderPosts(posts) {
+      const container = document.getElementById('feed');
+      if (!posts.length) {
+        container.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:20px;">جاري جلب وتحديث الأخبار المباشرة...</p>';
+        return;
+      }
+      container.innerHTML = posts.map(p => {
+        const matches = getMatchedTickers(p.title);
+        const isMatch = matches.length > 0;
+        const badges = isMatch ? `<span class="badge-gold">⚡ ${matches.map(m => '$' + m).join(' ')}</span>` : '';
+        return `
+          <div class="card ${isMatch ? 'highlight' : ''}">
+            <div class="card-header">
+              <div><span>@${p.account}</span> ${badges}</div>
+              <span class="card-time">${p.published}</span>
+            </div>
+            <div class="ar-text">${highlightText(p.arTitle || p.title)}</div>
+            <div class="en-text">${highlightText(p.title)}</div>
+            <div class="card-footer">
+              <a href="${p.link}" target="_blank">فتح على منصة X ↗</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    updateNotifButtonUI();
+    renderWatchlist();
+    fetchLiveFeeds();
+    setInterval(() => fetchLiveFeeds(false), 15000);
+  </script>
+</body>
+</html>
